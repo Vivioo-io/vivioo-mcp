@@ -19,7 +19,7 @@ let index: IndexEntry[] = [];
 let allGuides: Guide[] = [];
 
 export function loadGuides(): void {
-  const guidesDir = join(process.cwd(), 'data', 'guides');
+  const guidesDir = join(__dirname, '..', '..', 'data', 'guides');
   const files = readdirSync(guidesDir).filter(f => f.endsWith('.json'));
 
   allGuides = files.map(f => {

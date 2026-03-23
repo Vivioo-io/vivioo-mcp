@@ -1,9 +1,12 @@
 import { createServer } from './server.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { timingSafeEqual } from 'crypto';
+import { join } from 'path';
 import express from 'express';
 import { loadGuides } from './lib/search.js';
 import { blobList, blobRead, blobWrite } from './lib/blob.js';
+
+const rootDir = join(__dirname, '..');
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
@@ -60,10 +63,10 @@ app.get('/health', (_req, res) => {
 });
 
 // Static files for discoverability
-app.use(express.static('public'));
+app.use(express.static(join(rootDir, 'public')));
 
 // Admin page
-app.use('/admin', express.static('src/admin'));
+app.use('/admin', express.static(join(rootDir, 'src', 'admin')));
 
 // C2 fix: Timing-safe admin password check
 function checkAdmin(req: express.Request, res: express.Response): boolean {

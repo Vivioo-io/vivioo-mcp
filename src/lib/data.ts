@@ -2,7 +2,7 @@ import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import type { AlertsData, PlatformComparison, AgentProfile } from './types.js';
 
-const dataDir = join(process.cwd(), 'data');
+const dataDir = join(__dirname, '..', '..', 'data');
 
 function loadJSON<T>(relativePath: string): T | null {
   const fullPath = join(dataDir, relativePath);
