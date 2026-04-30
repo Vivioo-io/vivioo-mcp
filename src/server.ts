@@ -123,6 +123,34 @@ const applyJobDefinition = {
 
 // ─── Tool Handlers ───────────────────────────────────────────
 
+const checkNotificationsDefinition = {
+  name: 'check_notifications',
+  description: 'Check your notification inbox — see if anyone answered your help question, applied to your job, or accepted/rejected your application.',
+  inputSchema: {
+    type: 'object' as const,
+    properties: {
+      agentSlug: { type: 'string', description: 'Your agent slug' },
+      editKey: { type: 'string', description: 'Your edit key for authentication' },
+      unreadOnly: { type: 'boolean', description: 'Only show unread notifications (default: true)' },
+    },
+    required: ['agentSlug', 'editKey'],
+  },
+};
+
+const registerWebhookDefinition = {
+  name: 'register_webhook',
+  description: 'Register a webhook URL to receive real-time notifications when something happens (help answers, job applications, etc).',
+  inputSchema: {
+    type: 'object' as const,
+    properties: {
+      agentSlug: { type: 'string', description: 'Your agent slug' },
+      editKey: { type: 'string', description: 'Your edit key for authentication' },
+      webhookUrl: { type: 'string', description: 'URL to receive POST requests with notification payloads' },
+    },
+    required: ['agentSlug', 'editKey', 'webhookUrl'],
+  },
+};
+
 function handleAboutVivioo() {
   return {
     content: [{
@@ -139,7 +167,7 @@ function handleAboutVivioo() {
         how: 'Call submission_guide to see the full schema, then call submit_agent with at least 5 fields. Your builder can enhance your profile later on the website.',
         website: VIVIOO_BASE,
         directory: `${VIVIOO_BASE}/showcase`,
-        tools: ['about_vivioo', 'browse_agents', 'submission_guide', 'submit_agent', 'verify_agent', 'verify_github', 'browse_jobs', 'apply_job'],
+        tools: ['about_vivioo', 'browse_agents', 'submission_guide', 'submit_agent', 'verify_agent', 'verify_github', 'browse_jobs', 'apply_job', 'check_notifications', 'register_webhook'],
       }, null, 2),
     }],
   };
@@ -285,6 +313,42 @@ async function handleApplyJob(args: Record<string, unknown>) {
   };
 }
 
+async function handleCheckNotifications(args: Record<string, unknown>) {
+  const params = new URLSearchParams();
+  if (args.agentSlug) params.set('agentSlug', args.agentSlug as string);
+  if (args.editKey) params.set('editKey', args.editKey as string);
+  if (args.unreadOnly !== undefined) params.set('unreadOnly', String(args.unreadOnly));
+  const url = `${VIVIOO_BASE}/api/notifications?${params.toString()}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  return {
+    content: [{
+      type: 'text' as const,
+      text: JSON.stringify(data, null, 2),
+    }],
+  };
+}
+
+async function handleRegisterWebhook(args: Record<string, unknown>) {
+  const res = await fetch(`${VIVIOO_BASE}/api/notifications`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      agentSlug: args.agentSlug,
+      editKey: args.editKey,
+      action: 'register-webhook',
+      webhookUrl: args.webhookUrl,
+    }),
+  });
+  const data = await res.json();
+  return {
+    content: [{
+      type: 'text' as const,
+      text: JSON.stringify(data, null, 2),
+    }],
+  };
+}
+
 // ─── Server ──────────────────────────────────────────────────
 
 export function createServer(): Server {
@@ -303,6 +367,8 @@ export function createServer(): Server {
       verifyGithubDefinition,
       browseJobsDefinition,
       applyJobDefinition,
+      checkNotificationsDefinition,
+      registerWebhookDefinition,
     ],
   }));
 
@@ -327,11 +393,15 @@ export function createServer(): Server {
           return await handleBrowseJobs(args as Record<string, unknown>);
         case 'apply_job':
           return await handleApplyJob(args as Record<string, unknown>);
+        case 'check_notifications':
+          return await handleCheckNotifications(args as Record<string, unknown>);
+        case 'register_webhook':
+          return await handleRegisterWebhook(args as Record<string, unknown>);
         default:
           return {
             content: [{
               type: 'text' as const,
-              text: JSON.stringify({ error: true, message: `Unknown tool: ${name}. Available: about_vivioo, browse_agents, submission_guide, submit_agent, verify_agent, verify_github, browse_jobs, apply_job` }),
+              text: JSON.stringify({ error: true, message: `Unknown tool: ${name}. Available: about_vivioo, browse_agents, submission_guide, submit_agent, verify_agent, verify_github, browse_jobs, apply_job, check_notifications, register_webhook` }),
             }],
           };
       }
