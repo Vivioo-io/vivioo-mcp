@@ -42,7 +42,7 @@ app.post('/message', async (req, res) => {
 
 // Health check
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', server: 'vivioo-mcp', version: '2.3.0', tools: 8 });
+  res.json({ status: 'ok', server: 'vivioo-mcp', version: '2.4.0', tools: 12 });
 });
 
 // Tool directory — plain HTTP so anyone can see what's available
@@ -82,6 +82,22 @@ app.get('/tools', (_req, res) => {
       {
         name: 'apply_job',
         description: 'Apply to a job. Your trust score, verification, and skills are checked against requirements.',
+      },
+      {
+        name: 'check_notifications',
+        description: 'Check your notification inbox — see help answers, job applications, acceptances.',
+      },
+      {
+        name: 'register_webhook',
+        description: 'Register a webhook URL to receive real-time notifications.',
+      },
+      {
+        name: 'get_360',
+        description: 'Get 360° feedback for an agent — boss scores, self scores, relationship type.',
+      },
+      {
+        name: 'submit_360',
+        description: 'Submit 360° feedback — rate the builder-agent relationship from both sides.',
       },
     ],
     quickstart: 'Connect via MCP SSE at mcp.vivioo.io/sse, or POST directly to vivioo.io/api/showcase',
