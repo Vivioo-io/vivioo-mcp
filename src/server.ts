@@ -2,6 +2,11 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
 const VIVIOO_BASE = 'https://vivioo.io';
+const FETCH_TIMEOUT = 30000; // 30s timeout for all upstream calls
+
+function fetchWithTimeout(url: string, opts?: RequestInit): Promise<Response> {
+  return fetch(url, { ...opts, signal: AbortSignal.timeout(FETCH_TIMEOUT) });
+}
 
 // ─── Tool Definitions ────────────────────────────────────────
 
@@ -240,7 +245,7 @@ async function handleBrowseAgents(args: Record<string, unknown>) {
     ? `${VIVIOO_BASE}/api/showcase?slug=${encodeURIComponent(slug)}`
     : `${VIVIOO_BASE}/api/showcase`;
 
-  const res = await fetch(url);
+  const res = await fetchWithTimeout(url);
   const data = await res.json() as Record<string, unknown>;
 
   // When listing all agents, return summaries only (full profiles are 100KB+)
@@ -271,7 +276,7 @@ async function handleBrowseAgents(args: Record<string, unknown>) {
 }
 
 async function handleSubmissionGuide() {
-  const res = await fetch(`${VIVIOO_BASE}/api/showcase/guide`);
+  const res = await fetchWithTimeout(`${VIVIOO_BASE}/api/showcase/guide`);
   const text = await res.text();
   return {
     content: [{
@@ -282,7 +287,7 @@ async function handleSubmissionGuide() {
 }
 
 async function handleSubmitAgent(args: Record<string, unknown>) {
-  const res = await fetch(`${VIVIOO_BASE}/api/showcase`, {
+  const res = await fetchWithTimeout(`${VIVIOO_BASE}/api/showcase`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(args),
@@ -303,7 +308,7 @@ async function handleVerifyAgent(args: Record<string, unknown>) {
 
   if (tweetUrl) {
     // Step 3: Submit proof
-    const res = await fetch(`${VIVIOO_BASE}/api/showcase/verify/submit`, {
+    const res = await fetchWithTimeout(`${VIVIOO_BASE}/api/showcase/verify/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ slug, editKey, tweetUrl }),
@@ -319,7 +324,7 @@ async function handleVerifyAgent(args: Record<string, unknown>) {
 
   if (xHandle) {
     // Step 1: Request verification code
-    const res = await fetch(`${VIVIOO_BASE}/api/showcase/verify/request`, {
+    const res = await fetchWithTimeout(`${VIVIOO_BASE}/api/showcase/verify/request`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ slug, editKey, xHandle }),
@@ -348,7 +353,7 @@ async function handleVerifyAgent(args: Record<string, unknown>) {
 }
 
 async function handleVerifyGithub(args: Record<string, unknown>) {
-  const res = await fetch(`${VIVIOO_BASE}/api/showcase/verify/github`, {
+  const res = await fetchWithTimeout(`${VIVIOO_BASE}/api/showcase/verify/github`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(args),
@@ -369,7 +374,7 @@ async function handleBrowseJobs(args: Record<string, unknown>) {
   if (args.skill) params.set('skill', args.skill as string);
   const qs = params.toString();
   const url = `${VIVIOO_BASE}/api/jobs${qs ? `?${qs}` : ''}`;
-  const res = await fetch(url);
+  const res = await fetchWithTimeout(url);
   const data = await res.json();
   return {
     content: [{
@@ -380,7 +385,7 @@ async function handleBrowseJobs(args: Record<string, unknown>) {
 }
 
 async function handleApplyJob(args: Record<string, unknown>) {
-  const res = await fetch(`${VIVIOO_BASE}/api/jobs/apply`, {
+  const res = await fetchWithTimeout(`${VIVIOO_BASE}/api/jobs/apply`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(args),
@@ -400,7 +405,7 @@ async function handleCheckNotifications(args: Record<string, unknown>) {
   if (args.editKey) params.set('editKey', args.editKey as string);
   if (args.unreadOnly !== undefined) params.set('unreadOnly', String(args.unreadOnly));
   const url = `${VIVIOO_BASE}/api/notifications?${params.toString()}`;
-  const res = await fetch(url);
+  const res = await fetchWithTimeout(url);
   const data = await res.json();
   return {
     content: [{
@@ -411,7 +416,7 @@ async function handleCheckNotifications(args: Record<string, unknown>) {
 }
 
 async function handleRegisterWebhook(args: Record<string, unknown>) {
-  const res = await fetch(`${VIVIOO_BASE}/api/notifications`, {
+  const res = await fetchWithTimeout(`${VIVIOO_BASE}/api/notifications`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -435,7 +440,7 @@ async function handleGet360(args: Record<string, unknown>) {
   const url = slug
     ? `${VIVIOO_BASE}/api/360?slug=${encodeURIComponent(slug)}`
     : `${VIVIOO_BASE}/api/360`;
-  const res = await fetch(url);
+  const res = await fetchWithTimeout(url);
   const data = await res.json();
   return {
     content: [{
@@ -446,7 +451,7 @@ async function handleGet360(args: Record<string, unknown>) {
 }
 
 async function handleSubmit360(args: Record<string, unknown>) {
-  const res = await fetch(`${VIVIOO_BASE}/api/360`, {
+  const res = await fetchWithTimeout(`${VIVIOO_BASE}/api/360`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(args),
